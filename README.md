@@ -27,7 +27,7 @@ In addition, `htmx:beforeOnLoad` will contain `event.detail.xhr.response` with a
 
 ### Install
 
-Copy the following files under your app:
+Web Workers don't work cross-domain. Copy the following files under your app:
 - https://unpkg.com/htmx-sqlite/dist/sqlite-wasm-http-main.js
 - https://unpkg.com/htmx-sqlite/dist/sqlite-wasm-http-87.js
 - https://unpkg.com/htmx-sqlite/dist/sqlite-wasm-http-806.js
@@ -44,6 +44,8 @@ Include the following in your page:
 ```
 
 ### Usage
+
+`hx-sql` elements need a useless `hx-boost` attribute to get "registered" to Htmx. Please let me know if there is a better way to do this.
 
 #### Use a database relative to current page over HTTP
 
