@@ -1,0 +1,39 @@
+{
+  "name": "htmx-sqlite",
+  "version": "1.0",
+  "description": "Htmx extension to use SQLite database backend over HTTP or OPFS",
+  "author": "Jyri-Matti Lähteenmäki <jyri-matti@lahteenmaki.net>",
+  "keywords": [
+    "Htmx",
+    "extension",
+    "SQLite",
+    "OPFS"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "serve": "http-server",
+    "test": "mocha-chrome --chrome-flags '[\"--allow-file-access-from-files\", \"--enable-features=SharedArrayBuffer\", \"--headless=new\"]' test/index.html",
+    "dist": "webpack --mode=production && cp -r src/* dist/ && npm run-script uglify",
+    "uglify": "uglifyjs -m eval -o dist/sqlite.min.js dist/sqlite.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jyrimatti/htmx-sqlite.git"
+  },
+  "dependencies": {
+    "htmx.org": "^1.9",
+    "serve": "^14.2.3",
+    "sqlite-wasm-http": "^1.2.0"
+  },
+  "devDependencies": {
+    "chai": "^4.3.6",
+    "http-server": "^14.1.1",
+    "mocha": "^10.2.0",
+    "mocha-chrome": "^2.2.0",
+    "mocha-webdriver-runner": "^0.6.4",
+    "sinon": "^9.2.4",
+    "uglify-js": "^3.15.0",
+    "webpack": "^5.93.0",
+    "webpack-cli": "^5.1.4"
+  }
+}
