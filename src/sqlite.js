@@ -61,7 +61,7 @@ Extension to use SQLite database backend for Htmx over:
                 evt.detail.xhr = {
                     status: 200,
                     getAllResponseHeaders: function() {
-                        return this.getResponseHeader("Content-Type:application/json");
+                        return "Content-Type:application/json";
                     },
                     getResponseHeader: function(headerName) {
                         if (headerName.toLowerCase() === "content-type") {
@@ -128,7 +128,7 @@ Extension to use SQLite database backend for Htmx over:
                                         });
                                     
                                     evt.detail.xhr.responseJSON = allRows;
-                                    evt.detail.xhr.response     = allRows.length == 0 ? '' : JSON.stringify(allRows);
+                                    evt.detail.xhr.response     = JSON.stringify(allRows);
                                     onload();
                                 }
                             }

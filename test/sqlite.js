@@ -29,7 +29,7 @@ describe("sqlite extension", function() {
         it('empty result clears content', function (done) {
             var div = make('<div hx-trigger="load" hx-get="SELECT * FROM mytable"></div>');
             div.addEventListener('htmx:afterSwap', () => {
-                div.innerText.should.equal('');
+                div.innerText.should.equal('[]');
                 done();
             });
         });
