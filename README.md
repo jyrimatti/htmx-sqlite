@@ -13,17 +13,17 @@ This extension is a wrapper for [https://github.com/mmomtchev/sqlite-wasm-http].
 The http backend is kept open for the lifetime of the element having the corresponding `hx-db` attribute.
 
 Following events are emitted:
-- `htmx:sql:loadstart` when a query execution begins
+- `htmx:xhr:loadstart` when a query execution begins
    - `event.detail.xhr.db` is a promise for SQLite.Promiser
-- `htmx:sql:progress` for each row of the result
+- `htmx:xhr:progress` for each row of the result
    - `event.detail.xhr.db` is a promise for SQLite.Promiser
-   - `event.detail.xhr.response` is the received data row
-- `htmx:sql:loadend` when a query execution is finished (all rows are received) but before any swapping is 
+   - `event.detail.xhr.responseJSON` is the received data row as JSON
+   - `event.detail.xhr.response` is the received data row as stringified JSON
+- `htmx:xhr:loadend` when a query execution is finished (all rows are received) but before any swapping is 
 performed.
    - `event.detail.xhr.db` is a promise for SQLite.Promiser
-   - `event.detail.xhr.response` is all received data rows
-
-In addition, `htmx:beforeOnLoad` will contain `event.detail.xhr.response` with an array of all received data rows.
+   - `event.detail.xhr.responseJSON` is all received data rows as JSON
+   - `event.detail.xhr.response` is all received data rows as stringified JSON
 
 ### Install
 
@@ -40,18 +40,26 @@ Include the following in your page:
 
 ```html
 <script src="sqlite-wasm-http-main.js"></script>
-<script src="https://unpkg.com/htmx-sqlite/dist/sqlite.min.js"></script>
+<script crossorigin src="https://unpkg.com/htmx-sqlite/dist/sqlite.min.js"></script>
 ```
 
 ### Usage
 
-`hx-sql` elements need a useless `hx-boost` attribute to get "registered" to Htmx. Please let me know if there is a better way to do this.
+Use one of attributes
+- hx-get="SELECT ..."
+- hx-put="UPDATE ..."
+- hx-delete="DELETE ..."
+- hx-post="INSERT ..."
+- hx-post="ALTER ..."
+- hx-post="CREATE ..."
+- hx-post="DROP ..."
+- hx-post="TRUNCATE ..."
 
 #### Use a database relative to current page over HTTP
 
 ```html
 <body hx-ext="sqlite" hx-db="http:/mydb.db">
-  <div hx-boost="true" hx-trigger="load" hx-sql="SELECT * FROM mytable"></div>
+  <div hx-trigger="load" hx-get="SELECT * FROM mytable"></div>
 </body>
 ```
 
@@ -59,7 +67,7 @@ Include the following in your page:
 
 ```html
 <body hx-ext="sqlite" hx-db="https://example.com/mydb.db">
-  <div hx-boost="true" hx-trigger="load" hx-sql="SELECT * FROM mytable"></div>
+  <div hx-trigger="load" hx-get="SELECT * FROM mytable"></div>
 </body>
 ```
 
@@ -67,7 +75,7 @@ Include the following in your page:
 
 ```html
 <body hx-ext="sqlite" hx-db="opfs:mydb.db">
-   <div hx-sql="CREATE TABLE IF NOT EXISTS mytable(name STRING); INSERT INTO mytable VALUES ('foo'); SELECT * FROM mytable" hx-boost="true" hx-trigger="load"></div>
+   <div hx-post="CREATE TABLE IF NOT EXISTS mytable(name STRING); INSERT INTO mytable VALUES ('foo'); SELECT * FROM mytable" hx-trigger="load"></div>
 </body>
 ```
 
@@ -82,24 +90,23 @@ Include the following in your page:
 <script>
    Handlebars.registerPartial("template", Handlebars.compile(document.getElementById("template").innerHTML));
 </script>
-<div hx-boost="true" hx-trigger="load" handlebars-array-template="template" hx-sql="SELECT * FROM mytable"></div>
+<div hx-trigger="load" handlebars-array-template="template" hx-get="SELECT * FROM mytable"></div>
 ```
 
 #### Handle response rows one-by-one with javascript
 
 ```html
-<div hx-boost="true"
-     hx-trigger="load"
-     hx-sql="SELECT * FROM mytable"
-     hx-on:sql:loadstart="console.log('started');"
-     hx-on:sql:progress="this.innerText+=event.detail.xhr.response;"
-     hx-on:sql:loadend="console.log('finished');"></div>
+<div hx-trigger="load"
+     hx-get="SELECT * FROM mytable"
+     hx-on:xhr:loadstart="console.log('started');"
+     hx-on:xhr:progress="this.innerText+=event.detail.xhr.response;"
+     hx-on:xhr:loadend="console.log('finished');"></div>
 ```
 
 #### Handle the whole result with javascript
 
 ```html
-<div hx-boost="true" hx-trigger="load" hx-on:htmx:before-on-load="this.innerText='Got: '+event.detail.xhr.response.length+' rows';" hx-sql="SELECT * FROM mytable"></div>
+<div hx-trigger="load" hx-on:htmx:before-on-load="this.innerText='Got: '+event.detail.xhr.response.length+' rows';" hx-get="SELECT * FROM mytable"></div>
 ```
 
 
@@ -107,13 +114,13 @@ Include the following in your page:
 
 ```html
 <input name="ident" value="2" />
-<div hx-boost="true" hx-include="[name='ident']" hx-trigger="load, change from:[name='ident']" hx-sql="SELECT * FROM mytable WHERE ident=$ident"></div>
+<div hx-include="[name='ident']" hx-trigger="load, change from:[name='ident']" hx-get="SELECT * FROM mytable WHERE ident=$ident"></div>
 ```
 
-#### Use _value_ as the query if hx-sql is empty
+#### Use _value_ as the query if path is just "this.value"
 
 ```html
-<select hx-boost="true" hx-sql="" hx-trigger="change" hx-target="#target">
+<select hx-get="this.value" hx-trigger="change" hx-target="#target">
    <option disabled selected value></option>
    <option value="SELECT name FROM mytable">name</option>
    <option value="SELECT age FROM mytable">age</option>
@@ -124,5 +131,5 @@ Include the following in your page:
 #### Override default config
 
 ```html
-<div hx-boost="true" hx-trigger="load" hx-sql="SELECT * FROM mytable" hx-db-config="{ maxPageSize: 4096, timeout: 10000, cacheSize: 4096 }"></div>
+<div hx-trigger="load" hx-get="SELECT * FROM mytable" hx-request="{ maxPageSize: 4096, timeout: 10000, cacheSize: 4096 }"></div>
 ```

@@ -5,18 +5,18 @@ describe("sqlite extension", function() {
 
     beforeEach(function (done) {
         clearWorkArea();
-        let div = make('<div hx-boost="true" hx-trigger="load" hx-sql="CREATE TABLE IF NOT EXISTS mytable(name STRING);DELETE FROM mytable;"></div>')
-        div.addEventListener('htmx:sql:loadend', () => {
+        let div = make('<div hx-trigger="load" hx-post="CREATE TABLE IF NOT EXISTS mytable(name STRING);DELETE FROM mytable;"></div>')
+        div.addEventListener('htmx:xhr:loadend', () => {
             done();
         });
     });
 
     describe('General stuff', function () {
         it('can make multiple queries', function (done) {
-            var div = make('<div hx-boost="true" hx-trigger="load" hx-sql="INSERT INTO mytable VALUES(\'foo\'); SELECT * FROM mytable"></div>');
+            var div = make('<div hx-trigger="load" hx-post="INSERT INTO mytable VALUES(\'foo\'); SELECT * FROM mytable"></div>');
             var handler = () => {
                 div.innerText.should.equal('[{"name":"foo"}]');
-                var div2 = make('<div hx-boost="true" hx-trigger="load" hx-sql="INSERT INTO mytable VALUES(\'bar\'); SELECT * FROM mytable"></div>');
+                var div2 = make('<div hx-trigger="load" hx-post="INSERT INTO mytable VALUES(\'bar\'); SELECT * FROM mytable"></div>');
                 var handler2 = () => {
                     div2.innerText.should.equal('[{"name":"foo"},{"name":"bar"}]');
                     done();
@@ -27,7 +27,7 @@ describe("sqlite extension", function() {
         });
 
         it('empty result clears content', function (done) {
-            var div = make('<div hx-boost="true" hx-trigger="load" hx-sql="SELECT * FROM mytable"></div>');
+            var div = make('<div hx-trigger="load" hx-get="SELECT * FROM mytable"></div>');
             div.addEventListener('htmx:afterSwap', () => {
                 div.innerText.should.equal('');
                 done();
@@ -35,10 +35,10 @@ describe("sqlite extension", function() {
         });
 
         it('events', function (done) {
-            var div = make('<div hx-boost="true" hx-trigger="load" hx-sql="INSERT INTO mytable VALUES(\'foo\'); SELECT * FROM mytable"></div>');
-            div.addEventListener('htmx:sql:loadstart', () => {
-                div.addEventListener('htmx:sql:progress', () => {
-                    div.addEventListener('htmx:sql:loadend', () => {
+            var div = make('<div hx-trigger="load" hx-post="INSERT INTO mytable VALUES(\'foo\'); SELECT * FROM mytable"></div>');
+            div.addEventListener('htmx:xhr:loadstart', () => {
+                div.addEventListener('htmx:xhr:progress', () => {
+                    div.addEventListener('htmx:xhr:loadend', () => {
                         done();
                     });
                 });
@@ -50,14 +50,14 @@ describe("sqlite extension", function() {
                 e.reason.should.equal('Timeout while waiting on backend');
                 done();
             });
-            make(`<div hx-db="http:/test.db" hx-boost="true" hx-trigger="load" hx-db-config='{"timeout": 1}' hx-sql="SELECT * FROM mytable"></div>`);
+            make(`<div hx-db="http:/test.db" hx-trigger="load" hx-request='{"timeout": 1}' hx-get="SELECT * FROM mytable"></div>`);
         });
     });
 
     describe('Bind parameters', function () {
         it('hx-include', function (done) {
             make('<input type="text" name="nameParam" value="foo"/>');
-            var div = make('<div hx-boost="true" hx-trigger="load" hx-include="[name=\'nameParam\']" hx-sql="INSERT INTO mytable VALUES(\'foo\'); SELECT * FROM mytable WHERE name=$nameParam"></div>');
+            var div = make('<div hx-trigger="load" hx-include="[name=\'nameParam\']" hx-post="INSERT INTO mytable VALUES(\'foo\'); SELECT * FROM mytable WHERE name=$nameParam"></div>');
             var handler = () => {
                 div.innerText.should.equal('[{"name":"foo"}]');
                 done();
@@ -66,7 +66,7 @@ describe("sqlite extension", function() {
         });
 
         it('whole form', function (done) {
-            var div = make('<form><input type="text" name="nameParam" value="foo"/><div hx-boost="true" hx-trigger="load" hx-sql="INSERT INTO mytable VALUES(\'foo\'); SELECT * FROM mytable WHERE name=$nameParam"></div></form>');
+            var div = make('<form><input type="text" name="nameParam" value="foo"/><div hx-trigger="load" hx-post="INSERT INTO mytable VALUES(\'foo\'); SELECT * FROM mytable WHERE name=$nameParam"></div></form>');
             var handler = () => {
                 div.innerText.should.equal('[{"name":"foo"}]');
                 done();
@@ -75,10 +75,10 @@ describe("sqlite extension", function() {
         });
     });
 
-    describe('Use value of form field when hx-sql is empty', function () {
+    describe('Use value of form field when path is "this.value"', function () {
         it('input', function (done) {
             let target = make('<div id="targ"></div>');
-            make('<input type="text" hx-boost="true" hx-trigger="load" hx-sql="" hx-target="#targ" value="INSERT INTO mytable VALUES(\'foo\'); SELECT * FROM mytable"></div>');
+            make('<input type="text" hx-trigger="load" hx-post="this.value" hx-target="#targ" value="INSERT INTO mytable VALUES(\'foo\'); SELECT * FROM mytable"></div>');
             var handler = () => {
                 target.innerText.should.equal('[{"name":"foo"}]');
                 done();
@@ -88,7 +88,7 @@ describe("sqlite extension", function() {
 
         it('textarea', function (done) {
             let target = make('<div id="targ"></div>');
-            make('<textarea hx-boost="true" hx-trigger="load" hx-sql="" hx-target="#targ">INSERT INTO mytable VALUES(\'foo\'); SELECT * FROM mytable;</textarea>');
+            make('<textarea hx-trigger="load" hx-post="this.value" hx-target="#targ">INSERT INTO mytable VALUES(\'foo\'); SELECT * FROM mytable;</textarea>');
             var handler = () => {
                 target.innerText.should.equal('[{"name":"foo"}]');
                 done();
@@ -98,7 +98,7 @@ describe("sqlite extension", function() {
 
         it('select', function (done) {
             let target = make('<div id="targ"></div>');
-            make('<select hx-boost="true" hx-trigger="load" hx-sql="" hx-target="#targ"><option>INSERT INTO mytable VALUES(\'foo\'); SELECT * FROM mytable;</option><option selected>INSERT INTO mytable VALUES(\'bar\'); SELECT * FROM mytable;</option></select>');
+            make('<select hx-trigger="load" hx-post="this.value" hx-target="#targ"><option>INSERT INTO mytable VALUES(\'foo\'); SELECT * FROM mytable;</option><option selected>INSERT INTO mytable VALUES(\'bar\'); SELECT * FROM mytable;</option></select>');
             var handler = () => {
                 target.innerText.should.equal('[{"name":"bar"}]');
                 done();
