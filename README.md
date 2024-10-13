@@ -10,7 +10,9 @@ Any feedback and suggestions are welcome!
 
 This extension is a wrapper for [https://github.com/mmomtchev/sqlite-wasm-http]. Please have a look for more information of the underlying database access implementation.
 
-The http backend is kept open for the lifetime of the element having the corresponding `hx-db` attribute.
+The http backend for a query is shared witin the closest element having either `hx-db` or `hx-request` attribute.
+
+Note that the default `shared` backend type caches SQLite pages in memory. I'm not sure if there's any invalidation. If you have problems seeing changes in the database, try forcing the sync backend.
 
 Following events are emitted:
 - `htmx:xhr:loadstart` when a query execution begins
@@ -131,5 +133,5 @@ Use one of attributes
 #### Override default config
 
 ```html
-<div hx-trigger="load" hx-get="SELECT * FROM mytable" hx-request="{ maxPageSize: 4096, timeout: 10000, cacheSize: 4096 }"></div>
+<div hx-trigger="load" hx-get="SELECT * FROM mytable" hx-request='{ "maxPageSize": 4096, "timeout": 10000, "cacheSize": 4096, "backendType": "sync" }'></div>
 ```

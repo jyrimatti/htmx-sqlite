@@ -1,6 +1,6 @@
 {
   "name": "htmx-sqlite",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "description": "Htmx extension to use SQLite database backend over HTTP or OPFS",
   "author": "Jyri-Matti Lähteenmäki <jyri-matti@lahteenmaki.net>",
   "keywords": [

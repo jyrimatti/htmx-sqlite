@@ -45,6 +45,14 @@ describe("sqlite extension", function() {
             });
         });
 
+        it('sync backend', function (done) {
+            var div = make(`<div hx-trigger="load" hx-request='{"backendType": "sync"}' hx-get="SELECT * FROM mytable"></div>`);
+            div.addEventListener('htmx:afterSwap', () => {
+                div.innerText.should.equal('[]');
+                done();
+            });
+        });
+
         it('override http config', function (done) {
             window.addEventListener('unhandledrejection', e => {
                 e.reason.should.equal('Timeout while waiting on backend');

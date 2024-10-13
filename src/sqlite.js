@@ -16,6 +16,7 @@ Extension to use SQLite database backend for Htmx over:
                 maxPageSize: 4096,    // this is the current default SQLite page size
                 timeout:     10000,   // 10s
                 cacheSize:   4096     // 4 MB
+                //backendType: 'sync' // 'sync' or 'shared'. Defaults to 'shared' if available, otherwise sync;
             };
             sqlConfig = {
                 rowMode: 'object'
@@ -84,19 +85,21 @@ Extension to use SQLite database backend for Htmx over:
                     ...sqlConfig,
                     ...conf
                 };
+
+                var contextElem = htmx.closest(elt, '[hx-db],[hx-request]');
                 
                 var backend;
-                if (dbElem._htmx_sqlite_http_backend) {
-                    backend = dbElem._htmx_sqlite_http_backend;
+                if (contextElem._htmx_sqlite_http_backend) {
+                    backend = contextElem._htmx_sqlite_http_backend;
                 } else {
                     backend = dbURI.match(/^https?:/) ? { http: sqliteWasmHttp.createHttpBackend(config) }
                                                         : {};
-                    dbElem._htmx_sqlite_http_backend = backend;
+                    contextElem._htmx_sqlite_http_backend = backend;
                 }
-                dbElem.addEventListener('htmx:beforeCleanupElement', function(ev) {
-                    if (ev.detail.elt == dbElem && dbElem._htmx_sqlite_http_backend && dbElem._htmx_sqlite_http_backend.http) {
-                        dbElem._htmx_sqlite_http_backend.http.close();
-                        delete dbElem._htmx_sqlite_http_backend;
+                contextElem.addEventListener('htmx:beforeCleanupElement', function(ev) {
+                    if (ev.detail.elt == contextElem && contextElem._htmx_sqlite_http_backend && contextElem._htmx_sqlite_http_backend.http) {
+                        contextElem._htmx_sqlite_http_backend.http.close();
+                        delete contextElem._htmx_sqlite_http_backend;
                     }
                 });
 
