@@ -75,7 +75,10 @@ Extension to use SQLite database backend for Htmx over:
                 // use Htmx parameters as bind variables
                 var binds = {};
                 Object.entries(evt.detail.requestConfig.parameters).forEach(function([k,v]) {
-                    binds['$' + k] = v;
+                    // include only binds present in the query
+                    if (sql.indexOf('$' + k) > -1) {
+                        binds['$' + k] = v;
+                    }
                 });
 
                 var configElem = htmx.closest(elt, '[hx-request]');
